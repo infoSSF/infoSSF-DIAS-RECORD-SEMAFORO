@@ -5,8 +5,14 @@
   <title>Pantalla Días Sin Accidentes y Semáforo</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; margin: 0; padding: 20px; }
-    .panel { background: #222; padding: 20px; border-radius: 8px; max-width: 650px; margin: 0 auto 20px; text-align: left; }
-    .panel h2 { text-align: center; margin-top: 0; color: #00ffcc; }
+    .panel { background: #222; padding: 20px; border-radius: 8px; max-width: 650px; margin: 0 auto 20px; text-align: left; position: relative;}
+    .panel h2 { text-align: center; margin-top: 0; color: #00ffcc; padding-top: 10px; }
+    
+    /* Contenedor de idiomas arriba a la derecha */
+    .idiomas-container { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
+    .btn-idioma { background: #333; color: #fff; border: 1px solid #444; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+    .btn-idioma.activo { background: #00ffcc; color: #111; font-weight: bold; border-color: #00ffcc; }
+
     label { font-weight: bold; font-size: 14px; display: block; margin-top: 10px; }
     input[type="date"], input[type="number"], select, button { margin: 5px 0 12px; padding: 10px; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 4px; border: 1px solid #444; background: #181818; color: #fff; }
     button { cursor: pointer; border: none; font-weight: bold; font-size: 16px; margin-top: 10px; }
@@ -32,12 +38,12 @@
     .slide-contador { font-weight: bold; text-transform: uppercase; text-align: center; }
     img.slide-img { max-width: 100%; max-height: 100vh; object-fit: contain; }
 
-    /* Diseños del Semáforo según Imagen */
+    /* Diseños del Semáforo */
     .semaforo-wrapper { display: flex; flex-direction: column; align-items: center; width: 92%; max-width: 1000px; background: #fff; color: #111; padding: 30px; border-radius: 12px; box-sizing: border-box; }
     .semaforo-header { font-size: 3.5rem; font-weight: 900; align-self: flex-start; margin-bottom: 20px; color: #111; }
     .semaforo-main-layout { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 20px; }
     
-    /* Cuestión del Semáforo 4 luces */
+    /* Semáforo 4 luces verticales */
     .semaforo-box-4 { background: #1e2026; border-radius: 35px; padding: 20px 25px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .luz-4 { width: 75px; height: 75px; border-radius: 50%; background: #3a3d4a; transition: all 0.3s; }
     .luz-4.rojo.active { background: #ef4444; box-shadow: 0 0 35px #ef4444; }
@@ -56,34 +62,47 @@
     .badge-naranja { background: #f97316; color: #fff; }
     .badge-rojo { background: #ef4444; color: #fff; }
 
-    /* Registro Histórico (Abajo) */
+    /* Registro Histórico */
     .grid-registro-box { background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 20px; padding: 12px 18px; margin-top: 10px; }
     .grid-registro-title { font-size: 0.95rem; font-weight: bold; text-align: center; margin-bottom: 8px; color: #475569; }
     .grid-registro { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; justify-items: center; }
     .grid-registro.meses { grid-template-columns: repeat(6, 1fr); }
-    .grid-circle { width: 34px; height: 34px; border-radius: 50%; border: 1.5 solid #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; background: #e2e8f0; color: #334155; }
+    .grid-circle { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; background: #e2e8f0; color: #334155; }
     .grid-circle.filled-verde { background: #22c55e; color: #fff; border-color: #16a34a; }
     .grid-circle.filled-amarillo { background: #eab308; color: #000; border-color: #ca8a04; }
     .grid-circle.filled-naranja { background: #f97316; color: #fff; border-color: #ea580c; }
     .grid-circle.filled-rojo { background: #ef4444; color: #fff; border-color: #dc2626; }
+    .grid-circle.filled-ninguno { background: #e2e8f0; color: #334155; }
+    
+    /* Elemento de vídeo anti-bloqueo corporativo */
+    #videoDummy { position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; }
   </style>
 </head>
 <body>
 
+  <!-- Reproductor de vídeo invisible para engañar al sistema -->
+  <video id="videoDummy" autoplay loop muted playsinline></video>
+
   <div class="panel" id="configPanel">
-    <h2>Configuración de Pantalla</h2>
+    <!-- Botones de idioma -->
+    <div class="idiomas-container">
+      <button class="btn-idioma activo" onclick="cambiarIdioma('es')" id="btn-es">ES</button>
+      <button class="btn-idioma" onclick="cambiarIdioma('pt')" id="btn-pt">PT</button>
+    </div>
+
+    <h2 data-i18n="config_titulo">Configuración de Pantalla</h2>
     
-    <label>Fecha del último accidente:</label>
+    <label data-i18n="label_fecha_accidente">Fecha del último accidente:</label>
     <input type="date" id="fechaAccidente">
 
     <!-- Configuración Récord -->
     <div class="block-box">
-      <div style="font-weight: bold; margin-bottom: 10px; color: #00ffcc;">Configuración del Récord:</div>
+      <div style="font-weight: bold; margin-bottom: 10px; color: #00ffcc;" data-i18n="config_record_titulo">Configuración del Récord:</div>
       
       <div class="record-opcion">
         <label>
           <input type="radio" name="modoRecord" value="dias" id="modoDiasRadio" onchange="actualizarModoRecord()">
-          Introducir días de récord directamente
+          <span data-i18n="radio_record_dias">Introducir días de récord directamente</span>
         </label>
         <div class="record-inputs" id="contenedorDias">
           <input type="number" id="diasRecordManual" min="0">
@@ -93,7 +112,7 @@
       <div class="record-opcion">
         <label>
           <input type="radio" name="modoRecord" value="fechas" id="modoFechasRadio" onchange="actualizarModoRecord()">
-          Calcular récord entre dos fechas
+          <span data-i18n="radio_record_fechas">Calcular récord entre dos fechas</span>
         </label>
         <div class="record-inputs" id="contenedorFechas">
           <div class="rango-fechas">
@@ -106,64 +125,204 @@
 
     <!-- Configuración Semáforo e Histórico -->
     <div class="block-box">
-      <div style="font-weight: bold; margin-bottom: 10px; color: #00ffcc;">Configuración del Semáforo y Registro:</div>
+      <div style="font-weight: bold; margin-bottom: 10px; color: #00ffcc;" data-i18n="config_semaforo_titulo">Configuración del Semáforo y Registro:</div>
       
-      <label>Modo de visualización:</label>
+      <label data-i18n="label_modo_visor">Modo de visualización:</label>
       <select id="tipoPeriodo" onchange="cambiarModoPeriodo()">
-        <option value="Semana">Semanal (Semanas 1 a 52)</option>
-        <option value="Mes">Mensual (Enero a Diciembre)</option>
+        <!-- Las opciones se cargan dinámicamente por JS para el idioma -->
       </select>
 
-      <label id="lblSeleccionPeriodo">Seleccionar Periodo a Editar:</label>
+      <label id="lblSeleccionPeriodo" data-i18n="label_seleccionar_periodo">Seleccionar Periodo a Editar:</label>
       <select id="periodoSeleccionado" onchange="cargarDatosPeriodo()"></select>
 
-      <label>Estado del Semáforo para este periodo:</label>
+      <label data-i18n="label_estado_semaforo">Estado del Semáforo para este periodo:</label>
       <select id="colorSemaforo">
-        <option value="verde">Verde (Riesgo Bajo)</option>
-        <option value="amarillo">Amarillo (NC Menores)</option>
-        <option value="naranja">Naranja (NC Mayor)</option>
-        <option value="rojo">Rojo (NC Crítica)</option>
+        <!-- Opciones cargadas por JS -->
       </select>
 
-      <label>Conteo de Incidencias / NCs:</label>
+      <label data-i18n="label_conteo_incidencias">Conteo de Incidencias / NCs:</label>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:5px;">
-        <div><span style="color:#22c55e;">●</span> Leve / Riesgo Bajo: <input type="number" id="cantVerde" value="0" min="0"></div>
-        <div><span style="color:#eab308;">●</span> NC Menores: <input type="number" id="cantAmarillo" value="0" min="0"></div>
-        <div><span style="color:#f97316;">●</span> NC Mayor: <input type="number" id="cantNaranja" value="0" min="0"></div>
-        <div><span style="color:#ef4444;">●</span> NC Crítica: <input type="number" id="cantRojo" value="0" min="0"></div>
+        <div><span style="color:#22c55e;">●</span> <span data-i18n="leyenda_verde_txt_corto">Leve</span>: <input type="number" id="cantVerde" value="0" min="0"></div>
+        <div><span style="color:#eab308;">●</span> <span data-i18n="leyenda_amarillo_txt_corto">NC Menores</span>: <input type="number" id="cantAmarillo" value="0" min="0"></div>
+        <div><span style="color:#f97316;">●</span> <span data-i18n="leyenda_naranja_txt_corto">NC Mayor</span>: <input type="number" id="cantNaranja" value="0" min="0"></div>
+        <div><span style="color:#ef4444;">●</span> <span data-i18n="leyenda_rojo_txt_corto">NC Crítica</span>: <input type="number" id="cantRojo" value="0" min="0"></div>
       </div>
     </div>
 
-    <label>Duración por diapositiva (segundos):</label>
+    <label data-i18n="label_duracion">Duración por diapositiva (segundos):</label>
     <input type="number" id="duracion" value="25" min="1">
 
-    <label>Añadir imágenes adicionales:</label>
+    <label data-i18n="label_add_imgs">Añadir imágenes adicionales:</label>
     <input type="file" id="inputImagenes" multiple accept="image/*">
 
-    <h3>Imágenes guardadas (Arrastra para reordenar):</h3>
+    <h3 data-i18n="titulo_imgs_guardadas">Imágenes guardadas (Arrastra para reordenar):</h3>
     <div class="galeria" id="galeriaContenedor">
-      <p style="font-size: 14px; color: #aaa;">No hay imágenes guardadas.</p>
+      <p style="font-size: 14px; color: #aaa;" data-i18n="txt_no_imgs">No hay imágenes guardadas.</p>
     </div>
 
-    <button onclick="guardarCambios()" style="background:#22c55e; color:white;">Guardar Configuración</button>
-    <button onclick="iniciarVideo()" style="background:#0284c7; color:white;">Iniciar Video</button>
+    <button onclick="guardarCambios()" style="background:#22c55e; color:white;" data-i18n="btn_guardar">Guardar Configuración</button>
+    <button onclick="iniciarVideo()" style="background:#0284c7; color:white;" data-i18n="btn_iniciar">Iniciar Video</button>
   </div>
 
   <!-- Visor en Pantalla Completa -->
   <div id="visor"></div>
 
   <script>
+    // --- DICCIONARIO DE TRADUCCIONES ---
+    const i18n = {
+      es: {
+        config_titulo: "Configuración de Pantalla",
+        label_fecha_accidente: "Fecha del último accidente:",
+        config_record_titulo: "Configuración del Récord:",
+        radio_record_dias: "Introducir días de récord directamente",
+        radio_record_fechas: "Calcular récord entre dos fechas",
+        config_semaforo_titulo: "Configuración del Semáforo y Registro:",
+        label_modo_visor: "Modo de visualización:",
+        modo_semana: "Semanal (Semanas 1 a 52)",
+        modo_mes: "Mensual (Enero a Diciembre)",
+        label_seleccionar_periodo: "Seleccionar Periodo a Editar:",
+        label_estado_semaforo: "Estado del Semáforo para este periodo:",
+        semaforo_ninguno: "Sin color (Blanco / Apagado)",
+        semaforo_verde: "Verde (Riesgo Bajo)",
+        semaforo_amarillo: "Amarillo (NC Menores)",
+        semaforo_naranja: "Naranja (NC Mayor)",
+        semaforo_rojo: "Rojo (NC Crítica)",
+        label_conteo_incidencias: "Conteo de Incidencias / NCs:",
+        leyenda_verde_txt_corto: "Leve",
+        leyenda_amarillo_txt_corto: "NC Menores",
+        leyenda_naranja_txt_corto: "NC Mayor",
+        leyenda_rojo_txt_corto: "NC Crítica",
+        leyenda_verde_txt: "LEVE. RIESGO BAJO",
+        leyenda_amarillo_txt: "NC MENORES . RIESGO MEDIO",
+        leyenda_naranja_txt: "NC MAYOR . RIESGO ALTO",
+        leyenda_rojo_txt: "NC CRÍTICA",
+        label_duracion: "Duración por diapositiva (segundos):",
+        label_add_imgs: "Añadir imágenes adicionales:",
+        titulo_imgs_guardadas: "Imágenes guardadas (Arrastra para reordenar):",
+        txt_no_imgs: "No hay imágenes guardadas.",
+        btn_guardar: "Guardar Configuración",
+        btn_iniciar: "Iniciar Video",
+        txt_dias_sin: "DÍAS SIN ACCIDENTES",
+        txt_record: "RÉCORD:",
+        txt_semana: "Semana",
+        txt_semanas_anio: "Semanas",
+        txt_meses_anio: "Meses",
+        alert_guardado: "¡Configuración guardada correctamente!",
+        alert_imgs_pesadas: "Las imágenes son muy pesadas para guardarse en la memoria del navegador."
+      },
+      pt: {
+        config_titulo: "Configuração da Tela",
+        label_fecha_accidente: "Data do último acidente:",
+        config_record_titulo: "Configuração do Recorde:",
+        radio_record_dias: "Introduzir dias de recorde diretamente",
+        radio_record_fechas: "Calcular recorde entre duas datas",
+        config_semaforo_titulo: "Configuração do Semáforo e Registro:",
+        label_modo_visor: "Modo de visualização:",
+        modo_semana: "Semanal (Semanas 1 a 52)",
+        modo_mes: "Mensal (Janeiro a Dezembro)",
+        label_seleccionar_periodo: "Selecionar Período para Editar:",
+        label_estado_semaforo: "Estado do Semáforo para este período:",
+        semaforo_ninguno: "Sem cor (Branco / Desligado)",
+        semaforo_verde: "Verde (Risco Baixo)",
+        semaforo_amarillo: "Amarelo (NC Menores)",
+        semaforo_naranja: "Laranja (NC Maior)",
+        semaforo_rojo: "Vermelho (NC Crítica)",
+        label_conteo_incidencias: "Contagem de Incidentes / NCs:",
+        leyenda_verde_txt_corto: "Leve",
+        leyenda_amarillo_txt_corto: "NC Menores",
+        leyenda_naranja_txt_corto: "NC Maior",
+        leyenda_rojo_txt_corto: "NC Crítica",
+        leyenda_verde_txt: "LEVE. RISCO BAIXO",
+        leyenda_amarillo_txt: "NC MENORES . RISCO MÉDIO",
+        leyenda_naranja_txt: "NC MAIOR . RISCO MÉDIO",
+        leyenda_rojo_txt: "NC CRÍTICA",
+        label_duracion: "Duração por diapositivo (segundos):",
+        label_add_imgs: "Adicionar imagens adicionais:",
+        titulo_imgs_guardadas: "Imagens guardadas (Arraste para reordenar):",
+        txt_no_imgs: "Não há imagens guardadas.",
+        btn_guardar: "Guardar Configuração",
+        btn_iniciar: "Iniciar Vídeo",
+        txt_dias_sin: "DIAS SEM ACIDENTES",
+        txt_record: "RECORDE:",
+        txt_semana: "Semana",
+        txt_semanas_anio: "Semanas",
+        txt_meses_anio: "Meses",
+        alert_guardado: "Configuração guardada corretamente!",
+        alert_imgs_pesadas: "As imagens são muito pesadas para serem guardadas en la memoria del navegador."
+      }
+    };
+
+    let lengua = localStorage.getItem('app_lang') || 'es';
+
     let imagenesGuardadas = [];
     let indiceActual = 0;
     let temporizador = null;
     let draggedIndex = null;
+    let wakeLock = null;
 
     let historialSemanas = {};
     let historialMeses = {};
 
-    const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const nombresMesesES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const nombresMesesPT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+    function getNombresMeses() {
+      return lengua === 'es' ? nombresMesesES : nombresMesesPT;
+    }
+
+    // --- MÉTODOS ANTI-BLOQUEO CORPORATIVO ---
+
+    // 1. Generador de un vídeo real en streaming directo (falsificación nativa)
+    function iniciarVideoFalso() {
+      const video = document.getElementById('videoDummy');
+      if (video.srcObject) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 16;
+      canvas.height = 16;
+      const ctx = canvas.getContext('2d');
+
+      // Animación continua para generar fotogramas reales de vídeo
+      let toggle = false;
+      setInterval(() => {
+        ctx.fillStyle = toggle ? '#000000' : '#010101';
+        ctx.fillRect(0, 0, 16, 16);
+        toggle = !toggle;
+      }, 1000);
+
+      const stream = canvas.captureStream(1); // 1 FPS es suficiente para mantener activo el controlador de vídeo de Windows
+      video.srcObject = stream;
+      video.play().catch(e => console.log("Auto-play asistido"));
+    }
+
+    function detenerVideoFalso() {
+      const video = document.getElementById('videoDummy');
+      if (video.srcObject) {
+        const stream = video.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+      }
+    }
+
+    // 2. API Wake Lock estándar del navegador
+    async function solicitarWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {}
+      }
+    }
+
+    function liberareWakeLock() {
+      if (wakeLock !== null) {
+        wakeLock.release().then(() => { wakeLock = null; });
+      }
+    }
 
     window.onload = () => {
+      aplicarTraducciones();
+
       if (localStorage.getItem('fechaAccidente')) document.getElementById('fechaAccidente').value = localStorage.getItem('fechaAccidente');
       if (localStorage.getItem('diasRecordManual')) document.getElementById('diasRecordManual').value = localStorage.getItem('diasRecordManual');
       if (localStorage.getItem('fechaRecordInicio')) document.getElementById('fechaRecordInicio').value = localStorage.getItem('fechaRecordInicio');
@@ -194,22 +353,62 @@
       renderizarGaleria();
     };
 
+    function cambiarIdioma(lang) {
+      lengua = lang;
+      localStorage.setItem('app_lang', lang);
+      
+      document.querySelectorAll('.btn-idioma').forEach(b => b.classList.remove('activo'));
+      document.getElementById('btn-' + lang).classList.add('activo');
+
+      aplicarTraducciones();
+      cambiarModoPeriodo();
+    }
+
+    function aplicarTraducciones() {
+      const textos = i18n[lengua];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const clave = el.getAttribute('data-i18n');
+        if (textos[clave]) {
+          el.innerText = textos[clave];
+        }
+      });
+    }
+
     function cambiarModoPeriodo() {
       const tipo = document.getElementById('tipoPeriodo').value;
       const selector = document.getElementById('periodoSeleccionado');
-      selector.innerHTML = '';
+      const textos = i18n[lengua];
+      
+      const selectTipo = document.getElementById('tipoPeriodo');
+      const valorTipoActual = selectTipo.value; 
+      selectTipo.innerHTML = `
+        <option value="Semana">${textos.modo_semana}</option>
+        <option value="Mes">${textos.modo_mes}</option>
+      `;
+      selectTipo.value = valorTipoActual || (localStorage.getItem('tipoPeriodo') || 'Semana');
 
+      const selectColor = document.getElementById('colorSemaforo');
+      const valorColorActual = selectColor.value;
+      selectColor.innerHTML = `
+        <option value="ninguno">${textos.semaforo_ninguno}</option>
+        <option value="verde">${textos.semaforo_verde}</option>
+        <option value="amarillo">${textos.semaforo_amarillo}</option>
+        <option value="naranja">${textos.semaforo_naranja}</option>
+        <option value="rojo">${textos.semaforo_rojo}</option>
+      `;
+      selectColor.value = valorColorActual;
+
+      selector.innerHTML = '';
       if (tipo === 'Semana') {
-        document.getElementById('lblSeleccionPeriodo').innerText = 'Seleccionar Semana a Editar:';
         for (let i = 1; i <= 52; i++) {
           const opt = document.createElement('option');
           opt.value = i;
-          opt.innerText = `Semana ${i}`;
+          opt.innerText = `${textos.txt_semana} ${i}`;
           selector.appendChild(opt);
         }
       } else {
-        document.getElementById('lblSeleccionPeriodo').innerText = 'Seleccionar Mes a Editar:';
-        nombresMeses.forEach((m, idx) => {
+        const meses = getNombresMeses();
+        meses.forEach((m, idx) => {
           const opt = document.createElement('option');
           opt.value = idx + 1;
           opt.innerText = m;
@@ -219,15 +418,18 @@
 
       const periodoActivo = localStorage.getItem('periodoActivoKey') || '1';
       selector.value = periodoActivo;
+      
+      if (selector.value !== periodoActivo) selector.value = '1';
+
       cargarDatosPeriodo();
     }
 
     function cargarDatosPeriodo() {
       const tipo = document.getElementById('tipoPeriodo').value;
       const id = document.getElementById('periodoSeleccionado').value;
-      const registro = (tipo === 'Semana' ? historialSemanas[id] : historialMeses[id]) || { color: 'verde', verde: 0, amarillo: 0, naranja: 0, rojo: 0 };
+      const registro = (tipo === 'Semana' ? historialSemanas[id] : historialMeses[id]) || { color: 'ninguno', verde: 0, amarillo: 0, naranja: 0, rojo: 0 };
 
-      document.getElementById('colorSemaforo').value = registro.color || 'verde';
+      document.getElementById('colorSemaforo').value = registro.color || 'ninguno';
       document.getElementById('cantVerde').value = registro.verde || 0;
       document.getElementById('cantAmarillo').value = registro.amarillo || 0;
       document.getElementById('cantNaranja').value = registro.naranja || 0;
@@ -280,14 +482,16 @@
       try {
         localStorage.setItem('imagenesApp', JSON.stringify(imagenesGuardadas));
       } catch(e) {
-        alert('Las imágenes son muy pesadas para guardarse en la memoria del navegador.');
+        alert(i18n[lengua].alert_imgs_pesadas);
       }
       
-      alert('¡Configuración guardada correctamente!');
+      alert(i18n[lengua].alert_guardado);
     }
 
     document.getElementById('inputImagenes').addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+      
       let procesadas = 0;
       files.forEach(file => {
         const reader = new FileReader();
@@ -307,7 +511,7 @@
     function renderizarGaleria() {
       const contenedor = document.getElementById('galeriaContenedor');
       if (imagenesGuardadas.length === 0) {
-        contenedor.innerHTML = '<p style="font-size: 14px; color: #aaa;">No hay imágenes guardadas.</p>';
+        contenedor.innerHTML = `<p style="font-size: 14px; color: #aaa;" data-i18n="txt_no_imgs">${i18n[lengua].txt_no_imgs}</p>`;
         return;
       }
       contenedor.innerHTML = '';
@@ -375,26 +579,29 @@
 
     function generarGridRegistroHTML(tipo, periodoActivoId) {
       let html = '';
+      const anioActual = new Date().getFullYear();
+      const textos = i18n[lengua];
+
       if (tipo === 'Semana') {
         html += `<div class="grid-registro-box">
-                  <div class="grid-registro-title">Semanas 2026</div>
+                  <div class="grid-registro-title">${textos.txt_semanas_anio} ${anioActual}</div>
                   <div class="grid-registro">`;
-        // Generar 28 círculos de ejemplo en cuadrícula (o hasta la semana activa)
         const maxSemanas = Math.max(28, parseInt(periodoActivoId) || 28);
         for (let i = 1; i <= maxSemanas; i++) {
           const reg = historialSemanas[i];
-          const colorClass = reg ? `filled-${reg.color}` : '';
+          const colorClass = (reg && reg.color !== 'ninguno') ? `filled-${reg.color}` : '';
           html += `<div class="grid-circle ${colorClass}">${i}</div>`;
         }
         html += `</div></div>`;
       } else {
         html += `<div class="grid-registro-box">
-                  <div class="grid-registro-title">Meses 2026</div>
+                  <div class="grid-registro-title">${textos.txt_meses_anio} ${anioActual}</div>
                   <div class="grid-registro meses">`;
+        const mesesDef = getNombresMeses();
         for (let i = 1; i <= 12; i++) {
           const reg = historialMeses[i];
-          const colorClass = reg ? `filled-${reg.color}` : '';
-          const abreviatura = nombresMeses[i-1].substring(0,3);
+          const colorClass = (reg && reg.color !== 'ninguno') ? `filled-${reg.color}` : '';
+          const abreviatura = mesesDef[i-1].substring(0,3);
           html += `<div class="grid-circle ${colorClass}">${abreviatura}</div>`;
         }
         html += `</div></div>`;
@@ -404,35 +611,40 @@
 
     function mostrarSiguiente() {
       const visor = document.getElementById('visor');
+      const textos = i18n[lengua];
       visor.innerHTML = '';
 
+      if (totalSlidesVideo === 0) return;
+
       if (indiceActual === 0) {
-        /* Diapositiva 1: Contador y Récord */
         const diasActuales = obtenerDiasSinAccidentes();
         const recordDias = obtenerRecordDias(diasActuales);
         visor.innerHTML = `
           <div class="slide-contador">
-            <div style="font-size: 3rem; color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.5);">DÍAS SIN ACCIDENTES</div>
+            <div style="font-size: 3rem; color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.5);">${textos.txt_dias_sin}</div>
             <div style="font-size: 8.5rem; color: #ffeb3b; margin: 10px 0; line-height: 1;">${diasActuales}</div>
             <div style="font-size: 2.2rem; color: #aaa; margin-top: 30px; text-shadow: 0 0 8px rgba(255,255,255,0.2);">
-              RÉCORD: <span style="color: #4ade80; font-size: 3.2rem;">${recordDias}</span> DÍAS
+              ${textos.txt_record} <span style="color: #4ade80; font-size: 3.2rem;">${recordDias}</span> DÍAS
             </div>
           </div>`;
       } else if (indiceActual === 1) {
-        /* Diapositiva 2: Semáforo e Histórico según la imagen de referencia */
         const tipo = localStorage.getItem('tipoPeriodo') || 'Semana';
         const periodoId = localStorage.getItem('periodoActivoKey') || '1';
         const historialMap = tipo === 'Semana' ? historialSemanas : historialMeses;
-        const datos = historialMap[periodoId] || { color: 'verde', verde: 0, amarillo: 0, naranja: 0, rojo: 0 };
+        const datos = historialMap[periodoId] || { color: 'ninguno', verde: 0, amarillo: 0, naranja: 0, rojo: 0 };
 
-        const tituloPeriodo = tipo === 'Semana' ? `Semana ${periodoId}` : `${nombresMeses[parseInt(periodoId)-1] || ''}`;
+        let tituloPeriodo = "";
+        if (tipo === 'Semana') {
+          tituloPeriodo = `${textos.txt_semana} ${periodoId}`;
+        } else {
+          tituloPeriodo = getNombresMeses()[parseInt(periodoId) - 1];
+        }
 
         visor.innerHTML = `
           <div class="semaforo-wrapper">
             <div class="semaforo-header">${tituloPeriodo}</div>
             
             <div class="semaforo-main-layout">
-              <!-- Cuestión Semáforo 4 luces (Rojo, Naranja, Amarillo, Verde) -->
               <div class="semaforo-box-4">
                 <div class="luz-4 rojo ${datos.color === 'rojo' ? 'active' : ''}"></div>
                 <div class="luz-4 naranja ${datos.color === 'naranja' ? 'active' : ''}"></div>
@@ -442,38 +654,34 @@
 
               <div class="equal-connector">=</div>
 
-              <!-- Panel Derecho: Leyendas + Registro Inferior -->
               <div class="semaforo-right-panel">
                 <div class="legend-list">
                   <div class="legend-item">
-                    <div class="badge-count badge-verde">${datos.verde}</div> LEVE. RIESGO BAJO
+                    <div class="badge-count badge-verde">${datos.verde}</div> ${textos.leyenda_verde_txt}
                   </div>
                   <div class="legend-item">
-                    <div class="badge-count badge-amarillo">${datos.amarillo}</div> NC MENORES . RIESGO MEDIO
+                    <div class="badge-count badge-amarillo">${datos.amarillo}</div> ${textos.leyenda_amarillo_txt}
                   </div>
                   <div class="legend-item">
-                    <div class="badge-count badge-naranja">${datos.naranja}</div> NC MAYOR . RIESGO ALTO
+                    <div class="badge-count badge-naranja">${datos.naranja}</div> ${textos.leyenda_naranja_txt}
                   </div>
                   <div class="legend-item">
-                    <div class="badge-count badge-rojo">${datos.rojo}</div> NC CRÍTICA
+                    <div class="badge-count badge-rojo">${datos.rojo}</div> ${textos.leyenda_rojo_txt}
                   </div>
                 </div>
 
-                <!-- Cuadrícula Histórica -->
                 ${generarGridRegistroHTML(tipo, periodoId)}
               </div>
             </div>
           </div>`;
       } else {
-        /* Resto de diapositivas: Imágenes */
         const imgUrl = imagenesGuardadas[indiceActual - 2];
         if (imgUrl) {
           visor.innerHTML = `<img src="${imgUrl}" class="slide-img">`;
         }
       }
 
-      const totalSlides = 2 + imagenesGuardadas.length;
-      indiceActual = (indiceActual + 1) % totalSlides;
+      indiceActual = (indiceActual + 1) % totalSlidesVideo;
     }
 
     function activarPantallaCompleta(elemento) {
@@ -484,19 +692,49 @@
       } catch (e) {}
     }
 
+    let totalSlidesVideo = 0;
+
     function iniciarVideo() {
       if (temporizador) clearInterval(temporizador);
-      activarPantallaCompleta(document.documentElement);
-      document.getElementById('visor').style.display = 'flex';
       
+      const visor = document.getElementById('visor');
+      visor.style.display = 'flex';
+      visor.innerHTML = '<h1 style="color:white">Loading...</h1>';
+
+      totalSlidesVideo = 2 + imagenesGuardadas.length;
       indiceActual = 0;
-      mostrarSiguiente();
       
-      const duracionInput = parseInt(document.getElementById('duracion').value);
-      const duracionMs = (isNaN(duracionInput) || duracionInput < 1 ? 25 : duracionInput) * 1000;
+      activarPantallaCompleta(document.documentElement);
       
-      temporizador = setInterval(mostrarSiguiente, duracionMs);
+      // Activa ambas protecciones simultáneas para simular reproducción multimedia real
+      iniciarVideoFalso();
+      solicitarWakeLock();
+      
+      setTimeout(() => {
+        mostrarSiguiente();
+        const duracionInput = parseInt(document.getElementById('duracion').value);
+        const duracionMs = (isNaN(duracionInput) || duracionInput < 1 ? 25 : duracionInput) * 1000;
+        temporizador = setInterval(mostrarSiguiente, duracionMs);
+      }, 300);
     }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        if (temporizador) clearInterval(temporizador);
+        document.getElementById('visor').style.display = 'none';
+        
+        // Desactiva los recursos al salir de la pantalla completa
+        detenerVideoFalso();
+        liberareWakeLock();
+      }
+    });
+
+    document.addEventListener('visibilitychange', async () => {
+      if (document.fullscreenElement && document.visibilityState === 'visible') {
+        iniciarVideoFalso();
+        await solicitarWakeLock();
+      }
+    });
   </script>
 </body>
 </html>
